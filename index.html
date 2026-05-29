@@ -1,1 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxias Polemos I</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --ink: #f7fbff;
+            --muted: #a7b3c6;
+            --gold: #ffd36a;
+            --cyan: #4de7ff;
+            --violet: #9a6cff;
+            --red: #ff4b5f;
+            --green: #7dff9f;
+            --panel: rgba(4, 8, 18, 0.72);
+        }
 
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: #02040b;
+            color: var(--ink);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            letter-spacing: 0;
+        }
+
+        #starfield {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: #02040b;
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 18px clamp(18px, 4vw, 58px);
+            background: linear-gradient(180deg, rgba(2, 4, 11, 0.82), rgba(2, 4, 11, 0));
+            pointer-events: none;
+        }
+
+        .brand-mark {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--ink);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            pointer-events: auto;
+        }
+
+        .brand-sigil {
+            width: 34px;
+            height: 34px;
+            border: 2px solid var(--gold);
+            transform: rotate(45deg);
+            position: relative;
+            box-shadow: 0 0 24px rgba(255, 211, 106, 0.45);
+        }
+
+        .brand-sigil::before,
+        .brand-sigil::after {
+            content: "";
+            position: absolute;
+            inset: 7px;
+            border: 1px solid var(--cyan);
+        }
+
+        .brand-sigil::after {
+            inset: 13px;
+            background: var(--red);
+            border: 0;
+            box-shadow: 0 0 14px var(--red);
+        }
+
+        .nav-status {
+            color: var(--gold);
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            pointer-events: auto;
+        }
+
+        .hero {
+            min-height: 94vh;
+            display: grid;
+            align-items: end;
+            padding: 112px clamp(20px, 6vw, 86px) 8vh;
+        }
+
+        .hero-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.65fr);
+            gap: clamp(32px, 5vw, 76px);
+            align-items: end;
+            width: min(1180px, 100%);
+        }
+
+        h1 {
+            margin: 0;
+            max-width: 880px;
+            font-size: clamp(3.8rem, 11vw, 9.8rem);
+            line-height: 0.82;
+            text-transform: uppercase;
+            letter-spacing: 0;
+            text-shadow: 0 0 32px rgba(77, 231, 255, 0.24);
+        }
+
+        .subtitle {
+            margin: 26px 0 0;
+            max-width: 710px;
+            color: #d8e1ee;
+            font-size: clamp(1rem, 2vw, 1.35rem);
+            line-height: 1.55;
+        }
+
+        .cta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 34px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 54px;
+            padding: 0 22px;
+            border: 2px solid;
+            color: var(--ink);
+            text-decoration: none;
+            font-size: 0.86rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            background: rgba(0, 0, 0, 0.48);
+            backdrop-filter: blur(8px);
+            transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .button.primary {
+            border-color: var(--gold);
+            box-shadow: 0 0 24px rgba(255, 211, 106, 0.25);
+        }
+
+        .button.secondary {
+            border-color: var(--cyan);
+            box-shadow: 0 0 24px rgba(77, 231, 255, 0.18);
+        }
+
+        .signal-panel {
+            border-left: 3px solid var(--red);
+            background: var(--panel);
+            padding: 22px 24px;
+            box-shadow: 0 0 34px rgba(255, 75, 95, 0.16);
+            backdrop-filter: blur(10px);
+        }
+
+        .signal-label {
+            margin: 0 0 12px;
+            color: var(--red);
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+        }
+
+        .signal-panel p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .data-strip {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            border-top: 1px solid rgba(255,255,255,0.16);
+            border-bottom: 1px solid rgba(255,255,255,0.16);
+            background: rgba(2, 4, 11, 0.72);
+            backdrop-filter: blur(10px);
+        }
+
+        .datum {
+            min-height: 120px;
+            padding: 24px clamp(16px, 3vw, 34px);
+            border-right: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .datum:last-child {
+            border-right: 0;
+        }
+
+        .datum strong {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--green);
+            font-size: clamp(1.25rem, 3vw, 2rem);
+        }
+
+        .datum span {
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.45;
+        }
+
+        .briefing {
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(280px, 1.1fr);
+            gap: clamp(28px, 6vw, 78px);
+            padding: clamp(52px, 8vw, 110px) clamp(20px, 6vw, 86px);
+            background: linear-gradient(180deg, rgba(2, 4, 11, 0.36), rgba(9, 13, 26, 0.84));
+        }
+
+        .section-title {
+            margin: 0;
+            font-size: clamp(2rem, 5vw, 4.8rem);
+            line-height: 0.94;
+            text-transform: uppercase;
+        }
+
+        .briefing-copy {
+            color: #d6deec;
+            font-size: clamp(1rem, 1.6vw, 1.2rem);
+            line-height: 1.65;
+        }
+
+        .briefing-copy p {
+            margin: 0 0 18px;
+        }
+
+        .coming-soon {
+            display: inline-flex;
+            margin-top: 12px;
+            color: var(--gold);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+        }
+
+        @media (max-width: 820px) {
+            .hero {
+                min-height: 92vh;
+                padding-top: 96px;
+            }
+
+            .hero-layout,
+            .briefing {
+                grid-template-columns: 1fr;
+            }
+
+            .data-strip {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .datum:nth-child(2) {
+                border-right: 0;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .nav {
+                align-items: flex-start;
+                padding-inline: 16px;
+            }
+
+            .brand-mark {
+                max-width: 220px;
+                font-size: 0.78rem;
+            }
+
+            .nav-status {
+                display: none;
+            }
+
+            .data-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .datum {
+                border-right: 0;
+                border-bottom: 1px solid rgba(255,255,255,0.12);
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starfield" aria-hidden="true"></canvas>
+
+    <main class="page">
+        <nav class="nav" aria-label="Primary">
+            <div class="brand-mark">
+                <span class="brand-sigil" aria-hidden="true"></span>
+                Galaxias Polemos I
+            </div>
+            <div class="nav-status">Sector Beta Signal Detected</div>
+        </nav>
+
+        <section class="hero">
+            <div class="hero-layout">
+                <div>
+                    <h1>Galaxias Polemos I</h1>
+                    <p class="subtitle">The sector war begins after the Neon Void incident. Sector Alpha survived the first strike. Sector Beta answered with dreadnaught fire.</p>
+                    <div class="cta-row">
+                        <a class="button primary" href="#briefing">Open Briefing</a>
+                        <a class="button secondary" href="#intel">Read Intel</a>
+                    </div>
+                </div>
+                <aside class="signal-panel" id="intel">
+                    <p class="signal-label">Incoming War Log</p>
+                    <p>[connection restored] Sector office ruins detected. Beta fleet signatures crossing the inner dark. Alpha pilots are being recalled from every colony.</p>
+                </aside>
+            </div>
+        </section>
+
+        <section class="data-strip" aria-label="War status">
+            <div class="datum">
+                <strong>01</strong>
+                <span>First galaxy war campaign file opened.</span>
+            </div>
+            <div class="datum">
+                <strong>Alpha</strong>
+                <span>Player civilization regrouping after the office strike.</span>
+            </div>
+            <div class="datum">
+                <strong>Beta</strong>
+                <span>New enemy sector, dreadnaught-class command style.</span>
+            </div>
+            <div class="datum">
+                <strong>Void</strong>
+                <span>Neon Void wreckage still contaminates deep routes.</span>
+            </div>
+        </section>
+
+        <section class="briefing" id="briefing">
+            <h2 class="section-title">After The Void, The Galaxy Answers</h2>
+            <div class="briefing-copy">
+                <p>The solar system is gone, humanity is scattered across planet-sectors, and every civilization has its own version of survival. Sector Alpha built pilots. Sector Neon Void built impossible cores. Sector Beta built ships large enough to end conversations.</p>
+                <p>Galaxias Polemos I begins where the Neon Void transmission died: with a Beta dreadnaught entering the story and Sector Alpha realizing this was never one war.</p>
+                <span class="coming-soon">Coming Soon - Galaxy War 1</span>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        const stars = [];
+        const fleets = [];
+        let width = 0;
+        let height = 0;
+        let frame = 0;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            stars.length = 0;
+            fleets.length = 0;
+            const count = Math.min(240, Math.floor(width * height / 5200));
+            for (let i = 0; i < count; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    z: Math.random() * 0.8 + 0.2,
+                    twinkle: Math.random() * Math.PI * 2
+                });
+            }
+            for (let i = 0; i < 18; i++) {
+                fleets.push({
+                    angle: Math.random() * Math.PI * 2,
+                    radius: Math.min(width, height) * (0.26 + Math.random() * 0.26),
+                    speed: (Math.random() * 0.004 + 0.0015) * (i % 2 ? 1 : -1),
+                    color: i % 3 === 0 ? '#ff4b5f' : (i % 3 === 1 ? '#4de7ff' : '#ffd36a')
+                });
+            }
+        }
+
+        function drawPlanet(cx, cy, radius) {
+            const grad = ctx.createRadialGradient(cx - radius * 0.35, cy - radius * 0.35, radius * 0.1, cx, cy, radius);
+            grad.addColorStop(0, 'rgba(77, 231, 255, 0.4)');
+            grad.addColorStop(0.45, 'rgba(28, 38, 88, 0.85)');
+            grad.addColorStop(1, 'rgba(3, 6, 16, 0.95)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255, 211, 106, 0.42)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, radius * (1.38 + i * 0.2), radius * (0.34 + i * 0.08), frame * 0.002 + i * 0.35, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        function drawFleet(cx, cy) {
+            fleets.forEach((ship, index) => {
+                ship.angle += ship.speed;
+                const x = cx + Math.cos(ship.angle) * ship.radius;
+                const y = cy + Math.sin(ship.angle) * ship.radius * 0.48;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(ship.angle + Math.PI / 2);
+                ctx.fillStyle = ship.color;
+                ctx.shadowBlur = 18;
+                ctx.shadowColor = ship.color;
+                ctx.beginPath();
+                ctx.moveTo(0, -12 - (index % 3) * 3);
+                ctx.lineTo(7, 8);
+                ctx.lineTo(0, 4);
+                ctx.lineTo(-7, 8);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function render() {
+            frame++;
+            ctx.fillStyle = 'rgba(2, 4, 11, 0.82)';
+            ctx.fillRect(0, 0, width, height);
+
+            stars.forEach(star => {
+                star.twinkle += 0.035;
+                star.y += star.z * 0.18;
+                if (star.y > height + 2) star.y = -2;
+                ctx.globalAlpha = 0.35 + Math.sin(star.twinkle) * 0.25;
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(star.x, star.y, star.z * 2.4, star.z * 2.4);
+            });
+            ctx.globalAlpha = 1;
+
+            const cx = width * 0.68;
+            const cy = height * 0.43;
+            const radius = Math.max(170, Math.min(width, height) * 0.24);
+            drawPlanet(cx, cy, radius);
+            drawFleet(cx, cy);
+
+            ctx.strokeStyle = 'rgba(255, 75, 95, 0.18)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 8; i++) {
+                const y = (frame * 0.45 + i * height / 8) % height;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y + Math.sin(frame * 0.02 + i) * 22);
+                ctx.stroke();
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        render();
+    </script>
+</body>
+</html>
