@@ -1,7 +1,7 @@
 const STATE = { 
     WELCOME: 'welcome', MENU: 'menu', LEVEL_SELECT: 'level_select', 
     INTRO: 'intro', PLAYING: 'playing', GAMEOVER: 'gameover', 
-    VICTORY_SEQUENCE: 'victory_sequence', HANGAR: 'hangar'
+    VICTORY_SEQUENCE: 'victory_sequence', HANGAR: 'hangar', GAMMA_SETUP: 'gamma_setup'
 };
 let gameState = STATE.MENU;
 const MAX_STAGE = 100;
@@ -65,7 +65,11 @@ let omegaWave = 0;
 let omegaSpawnTimer = 0;
 let gammaPlanetHp = 100;
 let gammaDefenseStars = 24;
-let deltaRecruitCount = 0;
+let gammaSetupStars = 300;
+let gammaPendingLevel = 1;
+let gammaDefensePlan = { wall: 0, turret: 0, ship: 0 };
+let gammaDefenses = [];
+let deltaRecruits = [];
 
 // --- AUDIO SYSTEM ---
 let audioCtx = null;
@@ -751,6 +755,9 @@ const tacticalResourceEl = document.getElementById('tactical-resource');
 const omegaControlsEl = document.getElementById('omega-controls');
 const deltaControlsEl = document.getElementById('delta-controls');
 const gammaControlsEl = document.getElementById('gamma-controls');
+const gammaSetupScreen = document.getElementById('gamma-setup-screen');
+const gammaSetupStarsEl = document.getElementById('gamma-setup-stars');
+const gammaSetupSummaryEl = document.getElementById('gamma-setup-summary');
 
 const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, w: false, s: false, a: false, d: false, q: false, e: false, r: false, ' ': false };
 const mouse = { x: width / 2, y: height - 150, down: false, targetX: width / 2, targetY: height - 150 };
@@ -774,13 +781,13 @@ function setupTacticalHud() {
 function updateTacticalHud() {
     if (!tacticalHud || tacticalHud.style.display === 'none') return;
     if (activeDifficultyMode === 'insane' && omegaCore) {
-        tacticalResourceEl.innerText = `CORE HP ${Math.max(0, Math.ceil(omegaCore.hp))}% // ATTACK WAVE ${omegaWave}/6`;
+        tacticalResourceEl.innerText = `CORE HP ${Math.max(0, Math.ceil(omegaCore.hp))}% // MIMIC HP ${omegaRaiders[0] ? Math.max(0, Math.ceil(omegaRaiders[0].hp)) : 0}%`;
         const fmt = value => value > 0 ? `${Math.ceil(value / 60)}s` : 'READY';
         document.getElementById('omega-cd-laser').innerText = fmt(omegaCore.cooldowns.laser);
         document.getElementById('omega-cd-ring').innerText = fmt(omegaCore.cooldowns.ring);
         document.getElementById('omega-cd-missiles').innerText = fmt(omegaCore.cooldowns.missiles);
     } else if (activeDifficultyMode === 'easy') {
-        tacticalResourceEl.innerText = `DELTA RECRUIT WINGS ${deltaRecruitCount} // STORED STARS ${getModeData('easy').stars}`;
+        tacticalResourceEl.innerText = `DELTA RECRUIT SHIPS ${deltaRecruits.filter(ship => ship.active).length} // STORED STARS ${getModeData('easy').stars}`;
     } else if (activeDifficultyMode === 'sim') {
         tacticalResourceEl.innerText = `GAMMA PLANET HP ${Math.max(0, gammaPlanetHp)}% // DEFENSE RESERVE ${gammaDefenseStars} STARS`;
     } else {
@@ -789,11 +796,11 @@ function updateTacticalHud() {
 }
 
 function recruitDeltaWing() {
-    if (activeDifficultyMode !== 'easy' || gameState !== STATE.PLAYING || deltaRecruitCount >= 5) return;
+    if (activeDifficultyMode !== 'easy' || gameState !== STATE.PLAYING || deltaRecruits.length >= 5) return;
     const stats = getModeData('easy');
     if (stats.stars < 8) return alert('Delta needs 8 stars to recruit another wing.');
     stats.stars -= 8;
-    deltaRecruitCount++;
+    deltaRecruits.push({ x: player.x, y: player.y + 35, hp: 45, maxHp: 45, active: true, fire: 0, orbit: Math.random() * Math.PI * 2 });
     saveData();
     updateUI();
     updateTacticalHud();
@@ -808,6 +815,121 @@ function deployGammaBurst() {
     });
     for (let i = 0; i < 48; i++) particles.push(new Particle(width / 2, height - 22, '#7dff77', 11, 5, 36));
     updateTacticalHud();
+}
+
+function updateGammaSetupSummary() {
+    gammaSetupStarsEl.innerText = gammaSetupStars;
+    gammaSetupSummaryEl.innerText = `WALLS ${gammaDefensePlan.wall} // TURRETS ${gammaDefensePlan.turret} // GUARD SHIPS ${gammaDefensePlan.ship}`;
+}
+
+function openGammaSetup(levelIndex) {
+    gammaPendingLevel = levelIndex;
+    gammaSetupStars = 300;
+    gammaDefensePlan = { wall: 0, turret: 0, ship: 0 };
+    gameState = STATE.GAMMA_SETUP;
+    hideCampaignScreens();
+    gammaSetupScreen.style.opacity = '1';
+    gammaSetupScreen.style.pointerEvents = 'auto';
+    updateGammaSetupSummary();
+}
+
+function buyGammaDefense(type) {
+    if (gameState !== STATE.GAMMA_SETUP) return;
+    const costs = { wall: 50, turret: 75, ship: 100 };
+    const cost = costs[type];
+    if (!cost || gammaSetupStars < cost) return alert('Not enough Gamma reserve stars.');
+    gammaSetupStars -= cost;
+    gammaDefensePlan[type]++;
+    updateGammaSetupSummary();
+}
+
+function cancelGammaSetup() {
+    gammaSetupScreen.style.opacity = '0';
+    gammaSetupScreen.style.pointerEvents = 'none';
+    showCampaignSelect('sim');
+}
+
+function beginGammaDefense() {
+    gammaSetupScreen.style.opacity = '0';
+    gammaSetupScreen.style.pointerEvents = 'none';
+    launchMission('sim', gammaPendingLevel, true);
+}
+
+function createGammaDefenses() {
+    gammaDefenses = [];
+    for (let i = 0; i < gammaDefensePlan.wall; i++) {
+        gammaDefenses.push({ type: 'wall', x: width * (i + 1) / (gammaDefensePlan.wall + 1), y: height - 88, hp: 150, maxHp: 150, active: true });
+    }
+    for (let i = 0; i < gammaDefensePlan.turret; i++) {
+        gammaDefenses.push({ type: 'turret', x: width * (i + 1) / (gammaDefensePlan.turret + 1), y: height - 145, hp: 82, maxHp: 82, active: true, fire: i * 12 });
+    }
+    for (let i = 0; i < gammaDefensePlan.ship; i++) {
+        gammaDefenses.push({ type: 'ship', x: width / 2, y: height - 188, hp: 68, maxHp: 68, active: true, fire: i * 10, orbit: i * Math.PI * 2 / Math.max(1, gammaDefensePlan.ship) });
+    }
+}
+
+function drawDefenseHealthBar(defense) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
+    ctx.fillRect(defense.x - 22, defense.y + 22, 44, 5);
+    ctx.fillStyle = defense.type === 'wall' ? '#8db7ff' : '#7dff77';
+    ctx.fillRect(defense.x - 22, defense.y + 22, 44 * Math.max(0, defense.hp / defense.maxHp), 5);
+}
+
+function damageGammaFrontline(amount) {
+    const defense = gammaDefenses.find(item => item.active);
+    if (defense) {
+        defense.hp -= amount;
+        if (defense.hp <= 0) defense.active = false;
+    } else {
+        gammaPlanetHp -= amount;
+    }
+}
+
+function getEnemyAttackTarget() {
+    if (activeDifficultyMode === 'sim') {
+        const defense = gammaDefenses.find(item => item.active);
+        return defense || { x: width / 2, y: height - 10 };
+    }
+    return player || { x: width / 2, y: height - 100 };
+}
+
+function updateGammaDefenses() {
+    gammaDefenses.forEach((defense, index) => {
+        if (!defense.active) return;
+        defense.fire--;
+        if (defense.type === 'wall') {
+            ctx.fillStyle = 'rgba(70, 120, 255, 0.28)';
+            ctx.strokeStyle = '#8db7ff';
+            ctx.fillRect(defense.x - 36, defense.y - 14, 72, 28);
+            ctx.strokeRect(defense.x - 36, defense.y - 14, 72, 28);
+        } else if (defense.type === 'turret') {
+            ctx.strokeStyle = '#7dff77';
+            ctx.strokeRect(defense.x - 13, defense.y - 13, 26, 26);
+            ctx.beginPath();
+            ctx.moveTo(defense.x, defense.y - 13);
+            ctx.lineTo(defense.x, defense.y - 34);
+            ctx.stroke();
+            if (defense.fire <= 0) {
+                bullets.push(new Bullet(defense.x, defense.y - 28, 0, -13, 'player', 18));
+                defense.fire = 42;
+            }
+        } else {
+            defense.orbit += 0.018;
+            defense.x = width / 2 + Math.cos(defense.orbit) * (100 + index * 12);
+            defense.y = height - 176 + Math.sin(defense.orbit) * 32;
+            ctx.save();
+            ctx.translate(defense.x, defense.y);
+            ctx.scale(0.62, 0.62);
+            drawShipAsset(ctx, 0, false);
+            ctx.restore();
+            if (defense.fire <= 0) {
+                bullets.push(new Bullet(defense.x, defense.y - 18, 0, -15, 'player', 16));
+                defense.fire = 34;
+            }
+        }
+        drawDefenseHealthBar(defense);
+    });
+    gammaDefenses = gammaDefenses.filter(defense => defense.active);
 }
 
 let scene, camera, renderer;
@@ -2712,7 +2834,8 @@ class SwarmEnemy {
         this.y += 1.5;
         this.fireTimer--;
         
-        let targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
+        const attackTarget = getEnemyAttackTarget();
+        let targetAngle = Math.atan2(attackTarget.y - this.y, attackTarget.x - this.x);
         if (this.fireTimer <= 0) {
             this.angle = targetAngle; 
             bullets.push(new Bullet(this.x, this.y, Math.cos(this.angle)*4, Math.sin(this.angle)*4, 'boss_orb'));
@@ -2799,7 +2922,8 @@ class HeavyStriker {
         }
         this.fireTimer--;
 
-        let targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
+        const attackTarget = getEnemyAttackTarget();
+        let targetAngle = Math.atan2(attackTarget.y - this.y, attackTarget.x - this.x);
 
         if(this.fireTimer <= 0) {
             this.angle = targetAngle;
@@ -7799,7 +7923,7 @@ function updateLevelGrid(mode) {
     if (!gridEl) return;
     
     gridEl.innerHTML = ''; 
-    let maxLevels = MAX_STAGE;
+    let maxLevels = 6;
 
     for(let i = 1; i <= maxLevels; i++) { 
         const btn = document.createElement('button'); btn.className = 'level-btn';
@@ -8200,47 +8324,38 @@ function startOmegaCommandMode() {
     omegaCommandActive = true;
     omegaRaiders = [];
     omegaShots = [];
-    omegaWave = 0;
-    omegaSpawnTimer = 30;
+    omegaWave = currentLevelIndex;
+    omegaSpawnTimer = 0;
     omegaCore = {
         x: width / 2,
         y: 130,
         hp: 100,
         cooldowns: { laser: 0, ring: 0, missiles: 0 }
     };
+    spawnOmegaMimic();
     player = null;
     boss = null;
     gameState = STATE.PLAYING;
     canvas.style.opacity = '1';
     playerHud.style.opacity = '0';
     bossHud.style.opacity = '0';
-    waveText.innerText = 'OMEGA CORE ONLINE';
+    waveText.innerText = 'OMEGA VS MIMIC PILOT';
     waveText.style.color = '#ff2f92';
     waveText.style.opacity = 1;
     setupTacticalHud();
 }
 
-function spawnOmegaWave() {
-    omegaWave++;
-    if (omegaWave > 6) {
-        omegaCommandActive = false;
-        gameOver(true);
-        return;
-    }
-    const count = 5 + omegaWave * 2;
-    for (let i = 0; i < count; i++) {
-        omegaRaiders.push({
-            x: 40 + Math.random() * (width - 80),
-            y: height + 40 + i * 24,
-            hp: 22 + omegaWave * 6,
-            vx: (Math.random() - 0.5) * 2.4,
-            fire: 40 + Math.random() * 80,
-            active: true
-        });
-    }
-    waveText.innerText = `OMEGA DEFENSE WAVE ${omegaWave}`;
-    waveText.style.opacity = 1;
-    setTimeout(() => { if (omegaCommandActive) waveText.style.opacity = 0; }, 1000);
+function spawnOmegaMimic() {
+    omegaRaiders = [{
+        x: width / 2,
+        y: height - 110,
+        hp: 100 + currentLevelIndex * 16,
+        maxHp: 100 + currentLevelIndex * 16,
+        vx: 0,
+        fire: 18,
+        phase: Math.random() * Math.PI * 2,
+        active: true
+    }];
 }
 
 function triggerOmegaAttack(type) {
@@ -8295,12 +8410,6 @@ function updateOmegaCommandMode() {
     Object.keys(omegaCore.cooldowns).forEach(key => {
         omegaCore.cooldowns[key] = Math.max(0, omegaCore.cooldowns[key] - 1);
     });
-    if (omegaSpawnTimer > 0) omegaSpawnTimer--;
-    if (omegaSpawnTimer <= 0 && omegaRaiders.length === 0) {
-        spawnOmegaWave();
-        omegaSpawnTimer = 90;
-    }
-
     drawOmegaCore();
     omegaShots.forEach(shot => {
         shot.x += shot.vx;
@@ -8312,7 +8421,7 @@ function updateOmegaCommandMode() {
         ctx.arc(shot.x, shot.y, shot.size, 0, Math.PI * 2);
         ctx.fill();
         omegaRaiders.forEach(raider => {
-            if (shot.active && raider.active && Math.hypot(shot.x - raider.x, shot.y - raider.y) < 22) {
+            if (!shot.enemy && shot.active && raider.active && Math.hypot(shot.x - raider.x, shot.y - raider.y) < 22) {
                 raider.hp -= shot.damage;
                 shot.active = false;
                 if (raider.hp <= 0) {
@@ -8328,29 +8437,24 @@ function updateOmegaCommandMode() {
     omegaShots = omegaShots.filter(shot => shot.active);
 
     omegaRaiders.forEach(raider => {
-        raider.x += raider.vx;
-        raider.y -= 1.2 + omegaWave * 0.12;
+        const targetX = omegaCore.x + Math.sin(frames * 0.026 + raider.phase) * Math.min(260, width * 0.3);
+        raider.x += (targetX - raider.x) * 0.045;
+        raider.y = height - 110 + Math.sin(frames * 0.018 + raider.phase) * 38;
         raider.fire--;
         if (raider.fire <= 0) {
-            omegaCore.hp -= 1.8;
-            raider.fire = 80 + Math.random() * 70;
-        }
-        if (raider.y < omegaCore.y + 52) {
-            omegaCore.hp -= 8;
-            raider.active = false;
+            omegaCore.hp -= 2.4 + currentLevelIndex * 0.22;
+            raider.fire = Math.max(10, 30 - currentLevelIndex * 2);
+            for (let side = -1; side <= 1; side += 2) {
+                omegaShots.push({ x: raider.x + side * 9, y: raider.y - 12, vx: side * 0.25, vy: -13, damage: 0, size: 3, color: '#00ffff', active: true, enemy: true });
+            }
         }
         ctx.save();
         ctx.translate(raider.x, raider.y);
-        ctx.strokeStyle = '#8db7ff';
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#8db7ff';
-        ctx.beginPath();
-        ctx.moveTo(0, -14);
-        ctx.lineTo(12, 12);
-        ctx.lineTo(0, 7);
-        ctx.lineTo(-12, 12);
-        ctx.closePath();
-        ctx.stroke();
+        drawShipAsset(ctx, 0, false);
+        ctx.fillStyle = '#ff3355';
+        ctx.fillRect(-22, 27, 44, 4);
+        ctx.fillStyle = '#46b8ff';
+        ctx.fillRect(-22, 27, 44 * Math.max(0, raider.hp / raider.maxHp), 4);
         ctx.restore();
     });
     omegaRaiders = omegaRaiders.filter(raider => raider.active);
@@ -8360,20 +8464,43 @@ function updateOmegaCommandMode() {
     if (omegaCore.hp <= 0) {
         omegaCommandActive = false;
         gameOver(false);
+    } else if (omegaRaiders.length === 0) {
+        omegaCommandActive = false;
+        gameOver(true);
     }
 }
 
 function updateProtocolSupport() {
     if (!player || gameState !== STATE.PLAYING) return;
-    if (activeDifficultyMode === 'easy' && deltaRecruitCount > 0) {
-        for (let i = 0; i < deltaRecruitCount; i++) {
-            const angle = frames * 0.025 + i * Math.PI * 2 / deltaRecruitCount;
-            const x = player.x + Math.cos(angle) * 58;
-            const y = player.y + Math.sin(angle) * 34;
-            ctx.strokeStyle = '#ffd966';
-            ctx.strokeRect(x - 5, y - 5, 10, 10);
-            if (frames % 38 === i * 5 % 38) bullets.push(new Bullet(x, y - 8, 0, -14, 'player', player.damage * 0.65));
-        }
+    if (activeDifficultyMode === 'easy' && deltaRecruits.length > 0) {
+        deltaRecruits.forEach((ship, index) => {
+            if (!ship.active) return;
+            ship.orbit += 0.024;
+            ship.x = player.x + Math.cos(ship.orbit + index) * (62 + index * 8);
+            ship.y = player.y + Math.sin(ship.orbit + index) * 38;
+            ship.fire--;
+            ctx.save();
+            ctx.translate(ship.x, ship.y);
+            ctx.scale(0.58, 0.58);
+            drawShipAsset(ctx, 0, false);
+            ctx.restore();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(ship.x - 18, ship.y + 19, 36, 4);
+            ctx.fillStyle = '#ffd966';
+            ctx.fillRect(ship.x - 18, ship.y + 19, 36 * Math.max(0, ship.hp / ship.maxHp), 4);
+            if (ship.fire <= 0) {
+                bullets.push(new Bullet(ship.x, ship.y - 12, 0, -14, 'player', player.damage * 0.65));
+                ship.fire = 32;
+            }
+            enemies.forEach(enemy => {
+                if (enemy && enemy.active && Math.hypot(enemy.x - ship.x, enemy.y - ship.y) < 28) {
+                    ship.hp -= 12;
+                    enemy.active = false;
+                }
+            });
+            if (ship.hp <= 0) ship.active = false;
+        });
+        deltaRecruits = deltaRecruits.filter(ship => ship.active);
     }
     if (activeDifficultyMode === 'sim') {
         ctx.save();
@@ -8386,10 +8513,17 @@ function updateProtocolSupport() {
         ctx.fill();
         ctx.stroke();
         ctx.restore();
+        updateGammaDefenses();
         enemies.forEach(enemy => {
             if (enemy && enemy.active && enemy.y > height - 35) {
                 enemy.active = false;
-                gammaPlanetHp -= 6;
+                damageGammaFrontline(18);
+            }
+        });
+        bullets.forEach(bullet => {
+            if (bullet && bullet.active && !['player', 'phantom_laser', 'juggernaut_shot', 'player_missile', 'alpha_fireball', 'heavy_beam', 'tanker_shell', 'god_bullet'].includes(bullet.type) && bullet.y > height - 56) {
+                bullet.active = false;
+                damageGammaFrontline(Math.max(6, bullet.damage || 8));
             }
         });
         if (gammaPlanetHp <= 0) gameOver(false);
@@ -8397,7 +8531,11 @@ function updateProtocolSupport() {
     updateTacticalHud();
 }
 
-function launchMission(mode, levelIndex) {
+function launchMission(mode, levelIndex, gammaPrepared = false) {
+    if (mode === 'sim' && !gammaPrepared) {
+        openGammaSetup(levelIndex);
+        return;
+    }
     isInfiniteMode = false;
     infiniteWaveCount = 0;
     currentSettings = getDifficultySettings(mode); activeDifficultyMode = mode; currentLevelIndex = levelIndex;
@@ -8450,9 +8588,9 @@ function startActualGameplay() {
     score = 0;
     frames = 0;
     scoreEl.innerText = '0';
-    deltaRecruitCount = 0;
+    deltaRecruits = [];
     gammaPlanetHp = 100;
-    gammaDefenseStars = 24;
+    gammaDefenseStars = gammaSetupStars;
     if (activeDifficultyMode === 'insane') {
         startOmegaCommandMode();
         return;
@@ -8472,6 +8610,7 @@ function startActualGameplay() {
     updateAlphaAbilityHud();
     mouse.targetX = width/2; mouse.targetY = height - 100;
     currentWave = 0; startWave(1);
+    if (activeDifficultyMode === 'sim') createGammaDefenses();
     setupTacticalHud();
 }
 
@@ -8493,6 +8632,8 @@ function resetToMenu() {
     omegaCore = null;
     omegaRaiders = [];
     omegaShots = [];
+    gammaSetupScreen.style.opacity = '0';
+    gammaSetupScreen.style.pointerEvents = 'none';
     tacticalHud.style.display = 'none';
     hideCampaignScreens();
     hangarScreen.style.opacity = '0'; hangarScreen.style.pointerEvents = 'none';
@@ -8911,10 +9052,10 @@ function devUnlockAlpha() {
     }
 }
 
-document.getElementById('start-hard-btn').addEventListener('click', () => launchMission('hard', 1));
-document.getElementById('start-easy-btn').addEventListener('click', () => launchMission('easy', 1));
-document.getElementById('start-insane-btn').addEventListener('click', () => launchMission('insane', 1));
-document.getElementById('start-sim-btn').addEventListener('click', () => launchMission('sim', 1));
+document.getElementById('start-hard-btn').addEventListener('click', showExpertSelect);
+document.getElementById('start-easy-btn').addEventListener('click', showRookieSelect);
+document.getElementById('start-insane-btn').addEventListener('click', showInsaneSelect);
+document.getElementById('start-sim-btn').addEventListener('click', showSimulationSelect);
 if (typeof THREE !== 'undefined') initThreeMenu();
 
 checkFirstVisit(); requestAnimationFrame(animateGame);

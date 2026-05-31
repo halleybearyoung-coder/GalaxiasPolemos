@@ -161,11 +161,48 @@ canvas {
     clip-path: polygon(8% 0, 92% 0, 100% 12%, 100% 88%, 92% 100%, 8% 100%, 0 88%, 0 12%);
     box-shadow: inset 0 0 44px rgba(0, 245, 212, 0.07), 0 0 32px rgba(255, 47, 146, 0.08);
 }
-#level-select-screen, #simulation-level-select-screen, #expert-level-select-screen, #insane-level-select-screen, #hangar-screen, #intro-screen, #welcome-screen {
+#level-select-screen, #simulation-level-select-screen, #expert-level-select-screen, #insane-level-select-screen, #hangar-screen, #intro-screen, #welcome-screen, #gamma-setup-screen {
     pointer-events: auto;
     background: rgba(0,0,0,0.9);
     opacity: 0; 
     pointer-events: none;
+}
+.protocol-stage-screen {
+    gap: 10px;
+}
+.stage-page-note {
+    width: min(720px, 88vw);
+    margin: 0 auto 18px;
+    color: #c8d6ff;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: 1px;
+    text-align: center;
+}
+.gamma-setup-screen {
+    z-index: 45;
+    gap: 16px;
+    text-align: center;
+}
+.gamma-budget {
+    color: #ffd966;
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 3px;
+}
+.gamma-shop-grid,
+.gamma-setup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+}
+.gamma-shop-btn span {
+    display: block;
+    margin-top: 8px;
+    font-size: 10px;
+    letter-spacing: 1px;
 }
 #level-select-screen, #simulation-level-select-screen, #expert-level-select-screen, #insane-level-select-screen {
     display: block;
