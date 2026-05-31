@@ -272,6 +272,17 @@ canvas {
     letter-spacing: 4px;
     text-shadow: 0 0 12px rgba(0, 245, 212, 0.8);
 }
+.war-story {
+    width: min(760px, 86vw);
+    margin: -8px 0 24px;
+    color: #c8d6ff;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    letter-spacing: 1px;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(79, 140, 255, 0.45);
+}
 .btn-container {
     display: flex;
     gap: 20px;
@@ -345,6 +356,64 @@ canvas {
     min-width: 250px;
     min-height: 74px;
 }
+.protocol-btn span {
+    display: block;
+    margin-top: 8px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    opacity: 0.76;
+}
+#tactical-hud {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    z-index: 16;
+    display: none;
+    width: min(390px, calc(100vw - 36px));
+    padding: 14px 16px;
+    border: 1px solid rgba(141, 183, 255, 0.7);
+    background: rgba(3, 7, 20, 0.78);
+    box-shadow: 0 0 28px rgba(79, 140, 255, 0.22);
+    font-family: 'Courier New', monospace;
+    pointer-events: auto;
+}
+#tactical-mode {
+    color: #8db7ff;
+    font-weight: 900;
+    letter-spacing: 3px;
+}
+#tactical-objective,
+#tactical-resource {
+    margin-top: 6px;
+    color: #c8d6ff;
+    font-size: 12px;
+    line-height: 1.35;
+}
+#tactical-resource { color: #ffd966; }
+#omega-controls {
+    display: none;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-top: 10px;
+}
+#delta-controls,
+#gamma-controls {
+    display: none;
+    margin-top: 10px;
+}
+.tactical-btn {
+    padding: 8px 10px;
+    border: 1px solid #ff2f92;
+    background: rgba(25, 0, 22, 0.72);
+    color: #ff8bc9;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    cursor: pointer;
+    pointer-events: auto;
+}
+.tactical-btn:hover { background: rgba(255, 47, 146, 0.28); }
 .btn:hover {
     background: #00ffff;
     color: black;

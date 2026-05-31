@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Galaxias Polemos</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=20260528-stage100-true-void">
+    <link rel="stylesheet" href="style.css?v=20260531-faction-protocols">
 </head>
 <body>
 
@@ -94,11 +94,15 @@
         <div class="title-text galaxias-title">GALAXIAS POLEMOS</div>
         <div class="subtitle-text">SELECT WAR PROTOCOL</div>
         <div class="protocol-line">ORBITAL COMMAND // GALAXY WAR ONLINE</div>
+        <div class="war-story">
+            Alpha is gone forever. Its last pilot is drifting between the factions with one choice:
+            take revenge on Omega and Beta, or pose as a lost elite pilot and join the side that thinks it already won.
+        </div>
         <div class="btn-container difficulty-grid">
-            <button id="start-insane-btn" class="btn btn-insane">OMEGA</button>
-            <button id="start-hard-btn" class="btn btn-hard">BETA</button>
-            <button id="start-easy-btn" class="btn">DELTA</button>
-            <button id="start-sim-btn" class="btn btn-sim">GAMMA</button>
+            <button id="start-insane-btn" class="btn btn-insane protocol-btn">OMEGA<span>COMMAND THE BOSS</span></button>
+            <button id="start-hard-btn" class="btn btn-hard protocol-btn">BETA<span>INFILTRATE GAMMA</span></button>
+            <button id="start-easy-btn" class="btn protocol-btn">DELTA<span>RECRUIT THE FLEET</span></button>
+            <button id="start-sim-btn" class="btn btn-sim protocol-btn">GAMMA<span>DEFEND THE PLANET</span></button>
         </div>
         <div class="menu-hangar-grid">
             <button class="menu-hangar-btn" onclick="openHangar('easy')">DELTA HANGAR</button>
@@ -225,6 +229,23 @@
             </div>
             </div>
             <button class="btn" style="margin-top: 10px; border-color: #fff; color: #fff;" onclick="closeHangar()">EXIT HANGAR</button>
+        </div>
+    </div>
+
+    <div id="tactical-hud">
+        <div id="tactical-mode">PROTOCOL</div>
+        <div id="tactical-objective"></div>
+        <div id="tactical-resource"></div>
+        <div id="omega-controls">
+            <button class="tactical-btn" onclick="triggerOmegaAttack('laser')">Q // LANCE <span id="omega-cd-laser"></span></button>
+            <button class="tactical-btn" onclick="triggerOmegaAttack('ring')">E // ORBIT RING <span id="omega-cd-ring"></span></button>
+            <button class="tactical-btn" onclick="triggerOmegaAttack('missiles')">R // MISSILES <span id="omega-cd-missiles"></span></button>
+        </div>
+        <div id="delta-controls">
+            <button class="tactical-btn" onclick="recruitDeltaWing()">RECRUIT WING // 8 STARS</button>
+        </div>
+        <div id="gamma-controls">
+            <button class="tactical-btn" onclick="deployGammaBurst()">DEPLOY PLANET BURST // 4 STARS</button>
         </div>
     </div>
 
