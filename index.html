@@ -1,1 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Galaxias Polemos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="style.css?v=20260528-stage100-true-void">
+</head>
+<body>
 
+    <div id="three-container"></div>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="flash-overlay"></div>
+
+    <div id="brand-badge">asteroid.works</div>
+    <button id="dev-toggle" onclick="toggleDevPanel()">DEV</button>
+    <div id="dev-panel">
+        <div class="dev-title">TEST PANEL</div>
+        <div class="dev-row">
+            <span>PASS</span>
+            <input type="password" id="dev-password" class="dev-input" placeholder="ACCESS">
+            <button class="dev-btn" onclick="unlockDevPanel()">OPEN</button>
+        </div>
+        <div class="dev-row">
+            <span>STARS</span>
+            <input type="number" id="dev-stars" class="dev-input" placeholder="0">
+            <button class="dev-btn" onclick="devSetStars()">SET</button>
+        </div>
+        <div class="dev-row">
+            <span>WAVE</span>
+            <input type="number" id="dev-wave" class="dev-input" placeholder="#">
+            <button class="dev-btn" onclick="devSkipWave()">GO</button>
+        </div>
+        <button class="dev-btn dev-wide" onclick="devKillAll()">KILL ENEMIES</button>
+        <button class="dev-btn dev-wide" onclick="devUnlockAlpha()">UNLOCK DEV SHIPS</button>
+    </div>
+
+    <div id="msg-modal">
+        <div class="title-text" style="font-size: 30px; margin-bottom: 10px; color: #ff4444;">ACCESS DENIED</div>
+        <div id="msg-text">Level Locked. Complete previous sector.</div>
+        <button class="btn" onclick="closeMsgModal()" style="font-size: 16px; padding: 10px 30px;">OK</button>
+    </div>
+
+    <div id="ui-layer">
+        <div id="boss-hud">
+            <div id="boss-name">System Core: Omega</div>
+            <div id="boss-shield-container">
+                <div id="boss-shield-bar"></div>
+            </div>
+            <div id="boss-health-container">
+                <div id="boss-health-bar"></div>
+            </div>
+        </div>
+        <div id="player-hud">
+            <div class="hud-text">HP: <span id="player-hp">100</span>%</div>
+            <div class="hud-text">SCORE: <span id="score">0</span></div>
+            <div class="hud-text" style="color: #46b8ff;">STARS: <span id="stars-display">0</span></div>
+            <div id="alpha-abilities" class="hud-text alpha-abilities"></div>
+        </div>
+        <div class="phase-indicator" id="phase-debug">INIT</div>
+        <div id="wave-announcement">WAVE 1</div>
+    </div>
+
+    <div id="welcome-screen" class="screen-overlay">
+        <div class="radio-box" id="welcome-box">
+            <div class="radio-header">
+                <span id="welcome-header">UNIDENTIFIED SIGNAL</span>
+                <span class="blink">● LIVE</span>
+            </div>
+            <div id="welcome-content" class="radio-content">
+            </div>
+            <div class="radio-footer" id="welcome-footer">
+            </div>
+        </div>
+    </div>
+
+    <div id="intro-screen" class="screen-overlay">
+        <div class="radio-box">
+            <div class="radio-header">
+                <span>INCOMING TRANSMISSION</span>
+                <span class="blink">● REC</span>
+            </div>
+            <div id="radio-content" class="radio-content">
+            </div>
+            <div class="radio-footer">
+                <button class="btn" style="border-color: #00ff00; color: #00ff00; font-family: inherit;" onclick="skipIntro()">ESTABLISH LINK (SKIP) <span id="intro-countdown">180</span>s</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="menu-screen" class="screen-overlay">
+        <div class="title-text galaxias-title">GALAXIAS POLEMOS</div>
+        <div class="subtitle-text">SELECT WAR PROTOCOL</div>
+        <div class="protocol-line">ORBITAL COMMAND // GALAXY WAR ONLINE</div>
+        <div class="btn-container difficulty-grid">
+            <button id="start-insane-btn" class="btn btn-insane">OMEGA</button>
+            <button id="start-hard-btn" class="btn btn-hard">BETA</button>
+            <button id="start-easy-btn" class="btn">DELTA</button>
+            <button id="start-sim-btn" class="btn btn-sim">GAMMA</button>
+        </div>
+        <div class="menu-hangar-grid">
+            <button class="menu-hangar-btn" onclick="openHangar('easy')">DELTA HANGAR</button>
+            <button class="menu-hangar-btn" onclick="openHangar('sim')">GAMMA HANGAR</button>
+            <button class="menu-hangar-btn" onclick="openHangar('hard')">BETA HANGAR</button>
+            <button class="menu-hangar-btn" onclick="openHangar('insane')">OMEGA HANGAR</button>
+        </div>
+        <div class="controls-hint">ARROWS / WASD to Move &nbsp;|&nbsp; MOUSE to Follow</div>
+        <div id="coming-soon-teaser" class="coming-soon-teaser">GALAXY WAR I<br><span>ENTER THE POLEMOS</span></div>
+    </div>
+
+    <div id="hangar-screen" class="screen-overlay">
+        <div id="hangar-content">
+            <div class="title-text" id="hangar-title" style="font-size: 36px; margin-bottom: 10px; color: #fff; text-shadow: 0 0 20px #00ffff;">HANGAR</div>
+            <div style="font-size: 20px; color: #46b8ff; margin-bottom: 30px; font-weight: bold; text-shadow: 0 0 10px #46b8ff; letter-spacing: 2px;">CREDITS: <span id="hangar-stars">0</span> ✦</div>
+            <div class="hangar-tabs" role="tablist">
+                <button id="hangar-tab-ships" class="hangar-tab active" onclick="setHangarTab('ships')">SHIPS</button>
+                <button id="hangar-tab-upgrades" class="hangar-tab" onclick="setHangarTab('upgrades')">UPGRADES</button>
+                <button id="hangar-tab-merge" class="hangar-tab" onclick="setHangarTab('merge')">MERGE</button>
+            </div>
+            
+            <div id="hangar-panel-ships" class="hangar-tab-panel active">
+                <div class="hologram-container">
+                    <div class="holo-bracket hb-tl"></div>
+                    <div class="holo-bracket hb-tr"></div>
+                    <div class="holo-bracket hb-bl"></div>
+                    <div class="holo-bracket hb-br"></div>
+                    <div class="scanline"></div>
+                    <canvas id="hangarShipCanvas" width="200" height="200" style="z-index: 2;"></canvas>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; width: 300px; align-items:center; margin-bottom: 20px;">
+                    <button class="btn" style="padding: 10px 20px;" onclick="prevShip()">&#9664;</button>
+                    <div style="text-align:center;">
+                        <div id="ship-name" style="font-size: 24px; font-weight: bold; color: #00ffff; letter-spacing: 2px;">STRIKER</div>
+                        <div id="ship-desc" style="font-size: 14px; color: #aaa;">BALANCED</div>
+                    </div>
+                    <button class="btn" style="padding: 10px 20px;" onclick="nextShip()">&#9654;</button>
+                </div>
+                <button id="btn-equip-ship" class="btn" style="margin-bottom: 30px; font-size: 16px; padding: 10px 40px;" onclick="buyOrEquipShip()">EQUIPPED</button>
+            </div>
+
+            <div id="hangar-panel-merge" class="hangar-tab-panel">
+                <div class="upgrade-card merge-card">
+                    <div class="upgrade-title">SHIP MERGE BAY</div>
+                    <div class="upgrade-val">Equip one bought ship, preview another bought ship, then merge their systems.</div>
+                    <button id="btn-merge-ship" class="btn" style="margin-top: 16px; font-size: 14px; padding: 10px 28px; border-color: #ffd966; color: #ffd966;" onclick="mergeOrEquipFusion()">MERGE SHIPS</button>
+                </div>
+            </div>
+    
+            <div id="hangar-panel-upgrades" class="hangar-tab-panel">
+            <div class="upgrade-row">
+                <div class="upgrade-card card-hp">
+                    <div class="upgrade-title">HULL INTEGRITY</div>
+                    <div class="level-bar-container" id="hp-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="hp-bonus" style="color: #0f0;">+0 HP</div>
+                    <button id="btn-upg-hp" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #0f0; color: #0f0;" onclick="upgradeHealth()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-cannon">
+                    <div class="upgrade-title">MAIN CANNON</div>
+                    <div class="level-bar-container" id="cannon-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="cannon-bonus" style="color: #00ffff;">+0 DMG</div>
+                    <button id="btn-upg-cannon" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #00ffff; color: #00ffff;" onclick="upgradeCannon()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-engine">
+                    <div class="upgrade-title">ENGINE TUNING</div>
+                    <div class="level-bar-container" id="engine-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="engine-bonus" style="color: #46b8ff;">+0 SPD</div>
+                    <button id="btn-upg-engine" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #46b8ff; color: #46b8ff;" onclick="upgradeEngine()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-magnet">
+                    <div class="upgrade-title">GRAVITY SCOOP</div>
+                    <div class="level-bar-container" id="magnet-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="magnet-bonus" style="color: #aa66ff;">+0 RANGE</div>
+                    <button id="btn-upg-magnet" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #aa66ff; color: #aa66ff;" onclick="upgradeMagnet()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-shield">
+                    <div class="upgrade-title">SHIELD PLATING</div>
+                    <div class="level-bar-container" id="shield-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="shield-bonus" style="color: #7dff77;">-0% DMG</div>
+                    <button id="btn-upg-shield" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #7dff77; color: #7dff77;" onclick="upgradeShield()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-coolant">
+                    <div class="upgrade-title">COOLANT CORE</div>
+                    <div class="level-bar-container" id="coolant-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="coolant-bonus" style="color: #ff66cc;">+0% RATE</div>
+                    <button id="btn-upg-coolant" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #ff66cc; color: #ff66cc;" onclick="upgradeCoolant()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-missile">
+                    <div class="upgrade-title">MISSILE RACK</div>
+                    <div class="level-bar-container" id="missile-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="missile-bonus" style="color: #ff8844;">+0% MISSILE</div>
+                    <button id="btn-upg-missile" class="btn" style="font-size: 14px; padding: 10px; width: 100%; border-color: #ff8844; color: #ff8844;" onclick="upgradeMissile()">UPGRADE</button>
+                </div>
+
+                <div class="upgrade-card card-special locked" id="special-card">
+                    <div class="upgrade-title">HEAVY BEAM</div>
+                    <div class="level-bar-container" id="beam-bar-container">
+                        <div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div><div class="level-segment"></div>
+                    </div>
+                    <div class="highlight-val" id="beam-bonus" style="color: #555;">LOCKED</div>
+                    <button id="btn-upg-beam" class="btn" style="font-size: 14px; padding: 10px; width: 100%; background: #111; border-color: #333; cursor: not-allowed; color: #555;" onclick="upgradeHeavyBeam()">SYSTEM LOCKED</button>
+                </div>
+            </div>
+            </div>
+            <button class="btn" style="margin-top: 10px; border-color: #fff; color: #fff;" onclick="closeHangar()">EXIT HANGAR</button>
+        </div>
+    </div>
+
+    <div id="game-over-screen" class="screen-overlay">
+        <div class="title-text" id="game-over-title">Mission Failed</div>
+        <button id="retry-btn" class="btn" onclick="resetToMenu()">Main Menu</button>
+    </div>
+
+    <script src="script.js?v=20260531-galaxias-polemos"></script>
+</body>
+</html>
