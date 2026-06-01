@@ -758,6 +758,7 @@ const gammaControlsEl = document.getElementById('gamma-controls');
 const gammaSetupScreen = document.getElementById('gamma-setup-screen');
 const gammaSetupStarsEl = document.getElementById('gamma-setup-stars');
 const gammaSetupSummaryEl = document.getElementById('gamma-setup-summary');
+const cockpitReadoutEl = document.getElementById('cockpit-readout');
 
 const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, w: false, s: false, a: false, d: false, q: false, e: false, r: false, ' ': false };
 const mouse = { x: width / 2, y: height - 150, down: false, targetX: width / 2, targetY: height - 150 };
@@ -765,6 +766,70 @@ let isTouch = false;
 
 function clearGameplayKeys() {
     Object.keys(keys).forEach(key => { keys[key] = false; });
+}
+
+function setCockpitMode(enabled) {
+    document.body.classList.toggle('cockpit-mode', enabled);
+}
+
+function drawWireframeBattlefield() {
+    if (gameState !== STATE.PLAYING && gameState !== STATE.VICTORY_SEQUENCE) return;
+    ctx.save();
+    ctx.strokeStyle = activeDifficultyMode === 'sim' ? 'rgba(125, 255, 119, 0.16)' : 'rgba(70, 184, 255, 0.14)';
+    ctx.lineWidth = 1;
+    const horizon = height * 0.28;
+    for (let i = -8; i <= 8; i++) {
+        const x = width / 2 + i * width * 0.085;
+        ctx.beginPath();
+        ctx.moveTo(width / 2 + i * 12, horizon);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+    }
+    for (let row = 0; row < 14; row++) {
+        const t = row / 14;
+        const y = horizon + Math.pow(t, 1.72) * (height - horizon);
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(0, 245, 212, 0.16)';
+    for (let i = 0; i < 6; i++) {
+        const radius = 120 + i * 95 + Math.sin(frames * 0.018 + i) * 18;
+        ctx.beginPath();
+        ctx.arc(width / 2, horizon, radius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function drawWireframeShip(x, y, color, scale = 1, angle = 0) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.scale(scale, scale);
+    ctx.strokeStyle = color;
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, -24);
+    ctx.lineTo(22, 18);
+    ctx.lineTo(7, 12);
+    ctx.lineTo(0, 22);
+    ctx.lineTo(-7, 12);
+    ctx.lineTo(-22, 18);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, -24);
+    ctx.lineTo(0, 22);
+    ctx.moveTo(-22, 18);
+    ctx.lineTo(22, 18);
+    ctx.moveTo(-12, 2);
+    ctx.lineTo(12, 2);
+    ctx.stroke();
+    ctx.restore();
 }
 
 function setupTacticalHud() {
@@ -775,6 +840,7 @@ function setupTacticalHud() {
     omegaControlsEl.style.display = activeDifficultyMode === 'insane' ? 'grid' : 'none';
     deltaControlsEl.style.display = activeDifficultyMode === 'easy' ? 'block' : 'none';
     gammaControlsEl.style.display = activeDifficultyMode === 'sim' ? 'block' : 'none';
+    cockpitReadoutEl.innerText = `${doctrine.title} // VECTOR LINK ACTIVE`;
     updateTacticalHud();
 }
 
@@ -917,11 +983,7 @@ function updateGammaDefenses() {
             defense.orbit += 0.018;
             defense.x = width / 2 + Math.cos(defense.orbit) * (100 + index * 12);
             defense.y = height - 176 + Math.sin(defense.orbit) * 32;
-            ctx.save();
-            ctx.translate(defense.x, defense.y);
-            ctx.scale(0.62, 0.62);
-            drawShipAsset(ctx, 0, false);
-            ctx.restore();
+            drawWireframeShip(defense.x, defense.y, '#7dff77', 0.62, 0);
             if (defense.fire <= 0) {
                 bullets.push(new Bullet(defense.x, defense.y - 18, 0, -15, 'player', 16));
                 defense.fire = 34;
@@ -2792,6 +2854,7 @@ class Player {
             ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(0, -900); ctx.stroke();
         }
         ctx.restore(); ctx.shadowBlur = 0;
+        drawWireframeShip(this.x, this.y, loadout.ship.color, 1, stats.currentShip === 4 ? this.renderAngle + Math.PI / 2 : 0);
     }
     hit(damage) {
         if (this.iframes > 0 || !this.active) return;
@@ -2892,6 +2955,7 @@ class SwarmEnemy {
             ctx.beginPath(); ctx.arc(0, -8, 2, 0, Math.PI*2); ctx.fill();
         }
         ctx.restore();
+        drawWireframeShip(this.x, this.y, '#ff2f92', 0.72, this.angle - Math.PI / 2);
     }
     hit(damage) {
         this.hp -= damage;
@@ -8342,6 +8406,7 @@ function startOmegaCommandMode() {
     waveText.innerText = 'OMEGA VS MIMIC PILOT';
     waveText.style.color = '#ff2f92';
     waveText.style.opacity = 1;
+    setCockpitMode(true);
     setupTacticalHud();
 }
 
@@ -8419,7 +8484,14 @@ function updateOmegaCommandMode() {
         ctx.shadowColor = shot.color;
         ctx.beginPath();
         ctx.arc(shot.x, shot.y, shot.size, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.strokeStyle = shot.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        if (shot.enemy && shot.active && Math.hypot(shot.x - omegaCore.x, shot.y - omegaCore.y) < 54) {
+            omegaCore.hp -= 4 + currentLevelIndex * 0.35;
+            shot.active = false;
+            for (let i = 0; i < 7; i++) particles.push(new Particle(omegaCore.x, omegaCore.y, '#00ffff', 4, 3, 20));
+        }
         omegaRaiders.forEach(raider => {
             if (!shot.enemy && shot.active && raider.active && Math.hypot(shot.x - raider.x, shot.y - raider.y) < 22) {
                 raider.hp -= shot.damage;
@@ -8442,15 +8514,14 @@ function updateOmegaCommandMode() {
         raider.y = height - 110 + Math.sin(frames * 0.018 + raider.phase) * 38;
         raider.fire--;
         if (raider.fire <= 0) {
-            omegaCore.hp -= 2.4 + currentLevelIndex * 0.22;
             raider.fire = Math.max(10, 30 - currentLevelIndex * 2);
             for (let side = -1; side <= 1; side += 2) {
                 omegaShots.push({ x: raider.x + side * 9, y: raider.y - 12, vx: side * 0.25, vy: -13, damage: 0, size: 3, color: '#00ffff', active: true, enemy: true });
             }
         }
         ctx.save();
+        drawWireframeShip(raider.x, raider.y, '#00ffff', 1, 0);
         ctx.translate(raider.x, raider.y);
-        drawShipAsset(ctx, 0, false);
         ctx.fillStyle = '#ff3355';
         ctx.fillRect(-22, 27, 44, 4);
         ctx.fillStyle = '#46b8ff';
@@ -8479,11 +8550,7 @@ function updateProtocolSupport() {
             ship.x = player.x + Math.cos(ship.orbit + index) * (62 + index * 8);
             ship.y = player.y + Math.sin(ship.orbit + index) * 38;
             ship.fire--;
-            ctx.save();
-            ctx.translate(ship.x, ship.y);
-            ctx.scale(0.58, 0.58);
-            drawShipAsset(ctx, 0, false);
-            ctx.restore();
+            drawWireframeShip(ship.x, ship.y, '#ffd966', 0.58, 0);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             ctx.fillRect(ship.x - 18, ship.y + 19, 36, 4);
             ctx.fillStyle = '#ffd966';
@@ -8595,6 +8662,7 @@ function startActualGameplay() {
         startOmegaCommandMode();
         return;
     }
+    setCockpitMode(true);
     omegaCommandActive = false;
     player = new Player(); boss = new Boss();
     bullets = []; particles = []; enemies = []; drops = []; portals = [];
@@ -8627,6 +8695,7 @@ function resetToMenu() {
     infiniteWaveCount = 0;
     setLevelMusic(0);
     document.body.classList.remove('simulation-mode');
+    setCockpitMode(false);
     gameState = STATE.MENU; menuScreen.style.opacity = '1'; menuScreen.style.pointerEvents = 'auto';
     omegaCommandActive = false;
     omegaCore = null;
@@ -8650,6 +8719,7 @@ function resetToMenu() {
 function gameOver(win) {
     gameState = STATE.GAMEOVER; gameOverScreen.style.opacity = '1'; gameOverScreen.style.pointerEvents = 'auto';
     tacticalHud.style.display = 'none';
+    setCockpitMode(false);
     const defeatedByBoss = !win && boss && boss.active;
     gameOverScreen.classList.toggle('boss-defeat', defeatedByBoss);
     gameOverTitle.innerText = win ? "MISSION COMPLETE" : (defeatedByBoss ? `DEFEATED BY ${bossName.innerText}` : "MISSION FAILED");
@@ -8731,6 +8801,7 @@ function animateGame(currentTime) {
     if (gameState === STATE.MENU) return;
 
     frames++;
+    drawWireframeBattlefield();
     if (omegaCommandActive && gameState === STATE.PLAYING) {
         updateOmegaCommandMode();
         return;

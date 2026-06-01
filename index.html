@@ -5,12 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Galaxias Polemos</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=20260531-faction-protocols">
+    <link rel="stylesheet" href="style.css?v=20260531-wireframe-cockpit">
 </head>
 <body>
 
     <div id="three-container"></div>
     <canvas id="gameCanvas"></canvas>
+    <div id="cockpit-overlay">
+        <div class="cockpit-frame cockpit-left"></div>
+        <div class="cockpit-frame cockpit-right"></div>
+        <div class="cockpit-frame cockpit-top"></div>
+        <div class="cockpit-console">
+            <span>GALAXIAS POLEMOS // COCKPIT LINK</span>
+            <span id="cockpit-readout">ORBITAL VECTOR READY</span>
+        </div>
+        <div class="cockpit-reticle"></div>
+    </div>
 
     <div id="flash-overlay"></div>
 
@@ -91,26 +101,32 @@
     </div>
 
     <div id="menu-screen" class="screen-overlay">
-        <div class="title-text galaxias-title">GALAXIAS POLEMOS</div>
-        <div class="subtitle-text">SELECT WAR PROTOCOL</div>
-        <div class="protocol-line">ORBITAL COMMAND // GALAXY WAR ONLINE</div>
-        <div class="war-story">
-            Alpha is gone forever. Its last pilot is drifting between the factions with one choice:
-            take revenge on Omega and Beta, or pose as a lost elite pilot and join the side that thinks it already won.
+        <div class="command-deck">
+            <div class="command-copy">
+                <div class="protocol-line">COCKPIT NETWORK // GALAXY WAR I</div>
+                <div class="title-text galaxias-title">GALAXIAS<br>POLEMOS</div>
+                <div class="subtitle-text">CHOOSE YOUR ALLEGIANCE</div>
+                <div class="war-story">
+                    Alpha is gone forever. The last pilot can hunt Omega and Beta for revenge,
+                    or pose as a lost elite pilot and join the side that thinks it already won.
+                </div>
+                <div class="controls-hint">WIRESPACE COCKPIT // ARROWS / WASD // MOUSE VECTOR</div>
+            </div>
+            <div class="command-options">
+                <div class="btn-container difficulty-grid">
+                    <button id="start-easy-btn" class="btn protocol-btn">DELTA<span>RECRUIT THE FLEET</span></button>
+                    <button id="start-sim-btn" class="btn btn-sim protocol-btn">GAMMA<span>DEFEND THE PLANET</span></button>
+                    <button id="start-hard-btn" class="btn btn-hard protocol-btn">BETA<span>INFILTRATE GAMMA</span></button>
+                    <button id="start-insane-btn" class="btn btn-insane protocol-btn">OMEGA<span>COMMAND THE BOSS</span></button>
+                </div>
+                <div class="menu-hangar-grid">
+                    <button class="menu-hangar-btn" onclick="openHangar('easy')">DELTA ARMORY</button>
+                    <button class="menu-hangar-btn" onclick="openHangar('sim')">GAMMA ARMORY</button>
+                    <button class="menu-hangar-btn" onclick="openHangar('hard')">BETA ARMORY</button>
+                    <button class="menu-hangar-btn" onclick="openHangar('insane')">OMEGA ARMORY</button>
+                </div>
+            </div>
         </div>
-        <div class="btn-container difficulty-grid">
-            <button id="start-insane-btn" class="btn btn-insane protocol-btn">OMEGA<span>COMMAND THE BOSS</span></button>
-            <button id="start-hard-btn" class="btn btn-hard protocol-btn">BETA<span>INFILTRATE GAMMA</span></button>
-            <button id="start-easy-btn" class="btn protocol-btn">DELTA<span>RECRUIT THE FLEET</span></button>
-            <button id="start-sim-btn" class="btn btn-sim protocol-btn">GAMMA<span>DEFEND THE PLANET</span></button>
-        </div>
-        <div class="menu-hangar-grid">
-            <button class="menu-hangar-btn" onclick="openHangar('easy')">DELTA HANGAR</button>
-            <button class="menu-hangar-btn" onclick="openHangar('sim')">GAMMA HANGAR</button>
-            <button class="menu-hangar-btn" onclick="openHangar('hard')">BETA HANGAR</button>
-            <button class="menu-hangar-btn" onclick="openHangar('insane')">OMEGA HANGAR</button>
-        </div>
-        <div class="controls-hint">ARROWS / WASD to Move &nbsp;|&nbsp; MOUSE to Follow</div>
         <div id="coming-soon-teaser" class="coming-soon-teaser">GALAXY WAR I<br><span>ENTER THE POLEMOS</span></div>
     </div>
 
@@ -298,6 +314,6 @@
         <button id="retry-btn" class="btn" onclick="resetToMenu()">Main Menu</button>
     </div>
 
-    <script src="script.js?v=20260531-stage-pages-defense-shop"></script>
+    <script src="script.js?v=20260531-wireframe-cockpit"></script>
 </body>
 </html>

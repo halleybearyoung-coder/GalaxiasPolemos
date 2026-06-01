@@ -1,7 +1,7 @@
 body {
     margin: 0;
     overflow: hidden;
-    background-color: #050505;
+    background-color: #01060d;
     color: white;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     touch-action: none;
@@ -28,6 +28,82 @@ canvas {
     opacity: 0;
     transition: opacity 1s;
 }
+#cockpit-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 14;
+    display: none;
+    pointer-events: none;
+    color: #8db7ff;
+    font-family: 'Courier New', monospace;
+}
+body.cockpit-mode #cockpit-overlay { display: block; }
+.cockpit-frame {
+    position: absolute;
+    border-color: rgba(98, 180, 255, 0.72);
+    filter: drop-shadow(0 0 12px rgba(0, 245, 212, 0.38));
+}
+.cockpit-left,
+.cockpit-right {
+    bottom: -8vh;
+    width: 30vw;
+    height: 76vh;
+    border-top: 4px solid;
+}
+.cockpit-left {
+    left: -8vw;
+    border-right: 5px solid;
+    transform: skewX(-14deg);
+}
+.cockpit-right {
+    right: -8vw;
+    border-left: 5px solid;
+    transform: skewX(14deg);
+}
+.cockpit-top {
+    top: -14vh;
+    left: 23vw;
+    width: 54vw;
+    height: 31vh;
+    border-bottom: 4px solid;
+    border-left: 4px solid;
+    border-right: 4px solid;
+    clip-path: polygon(12% 0, 88% 0, 100% 100%, 0 100%);
+}
+.cockpit-console {
+    position: absolute;
+    bottom: 0;
+    left: 17vw;
+    right: 17vw;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 24px;
+    border: 2px solid rgba(98, 180, 255, 0.72);
+    border-bottom: 0;
+    background: rgba(0, 10, 22, 0.82);
+    color: #00f5d4;
+    font-size: 11px;
+    letter-spacing: 2px;
+}
+.cockpit-reticle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 58px;
+    height: 58px;
+    border: 1px solid rgba(0, 245, 212, 0.58);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+.cockpit-reticle::before,
+.cockpit-reticle::after {
+    content: '';
+    position: absolute;
+    background: rgba(0, 245, 212, 0.65);
+}
+.cockpit-reticle::before { top: 28px; left: -18px; width: 94px; height: 1px; }
+.cockpit-reticle::after { top: -18px; left: 28px; width: 1px; height: 94px; }
 #ui-layer {
     position: absolute;
     top: 0;
@@ -135,11 +211,31 @@ canvas {
 #menu-screen {
     pointer-events: auto;
     background:
-        radial-gradient(circle at center, rgba(18, 31, 82, 0.24), rgba(0, 0, 0, 0.72) 66%),
-        rgba(0,0,0,0.4);
+        linear-gradient(104deg, rgba(3, 15, 31, 0.96) 0 46%, rgba(2, 8, 20, 0.52) 46% 100%),
+        radial-gradient(circle at 76% 50%, rgba(0, 245, 212, 0.13), transparent 36%),
+        rgba(0,0,0,0.7);
     opacity: 0; 
     z-index: 30;
     visibility: visible;
+}
+.command-deck {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.92fr) minmax(450px, 1.08fr);
+    gap: 48px;
+    width: min(1180px, 92vw);
+    align-items: center;
+}
+.command-copy { text-align: left; }
+.command-copy .title-text,
+.command-copy .subtitle-text,
+.command-copy .war-story { text-align: left; }
+.command-copy .title-text { line-height: 0.92; }
+.command-copy .war-story { margin-left: 0; }
+.command-options {
+    padding: 22px;
+    border: 1px solid rgba(0, 245, 212, 0.28);
+    background: rgba(0, 8, 18, 0.62);
+    clip-path: polygon(4% 0, 100% 0, 100% 92%, 96% 100%, 0 100%, 0 8%);
 }
 #menu-screen::before,
 #menu-screen::after {
@@ -364,6 +460,18 @@ canvas {
     position: relative;
     z-index: 90;
     pointer-events: auto;
+}
+body.cockpit-mode #gameCanvas {
+    filter: saturate(1.15) contrast(1.12) brightness(0.88);
+}
+body.cockpit-mode #three-container {
+    opacity: 0.68;
+}
+@media (max-width: 900px) {
+    .command-deck { grid-template-columns: 1fr; gap: 18px; }
+    .command-copy .title-text { font-size: 44px; }
+    .command-copy .war-story { font-size: 11px; }
+    .cockpit-console { left: 5vw; right: 5vw; font-size: 9px; }
 }
 .btn {
     background: rgba(0, 0, 0, 0.6);
