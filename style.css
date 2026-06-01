@@ -285,6 +285,28 @@ body.cockpit-mode #cockpit-overlay { display: block; }
 }
 .protocol-stage-screen {
     gap: 10px;
+    background:
+        linear-gradient(135deg, rgba(6, 20, 42, 0.96), rgba(0, 0, 0, 0.96)) !important;
+}
+.protocol-stage-screen::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.72;
+    background:
+        repeating-linear-gradient(62deg, transparent 0 70px, rgba(70, 184, 255, 0.12) 71px 73px),
+        repeating-linear-gradient(-62deg, transparent 0 70px, rgba(0, 245, 212, 0.08) 71px 73px);
+    mask-image: radial-gradient(circle, black 0 56%, transparent 92%);
+}
+#simulation-level-select-screen {
+    background: linear-gradient(145deg, rgba(2, 35, 21, 0.98), rgba(0, 8, 5, 0.98)) !important;
+}
+#expert-level-select-screen {
+    background: linear-gradient(145deg, rgba(46, 4, 8, 0.98), rgba(8, 0, 3, 0.98)) !important;
+}
+#insane-level-select-screen {
+    background: linear-gradient(145deg, rgba(42, 0, 35, 0.98), rgba(8, 0, 16, 0.98)) !important;
 }
 .stage-page-note {
     width: min(720px, 88vw);
@@ -828,9 +850,8 @@ body.cockpit-mode #three-container {
 .locked:hover { transform: none; box-shadow: none; border-color: #333; }
 
 .level-grid {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(172px, 1fr));
     gap: 18px;
     margin: 0 auto 40px;
     flex-wrap: wrap;
@@ -841,24 +862,43 @@ body.cockpit-mode #three-container {
     padding-bottom: 110px;
 }
 .level-btn {
-    width: 92px;
-    height: 92px;
-    border-radius: 10%;
+    width: 100%;
+    min-height: 100px;
+    border-radius: 0;
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
     background: rgba(0, 0, 0, 0.5);
     border: 2px solid #444;
     color: #444;
-    font-size: 32px;
+    font-size: 28px;
     font-weight: bold;
     cursor: pointer; 
     transition: all 0.3s;
     display: flex;
     justify-content: center;
+    flex-direction: column;
     align-items: center;
     backdrop-filter: blur(5px);
     z-index: 50;
     position: relative;
     pointer-events: auto !important;
     touch-action: manipulation;
+}
+.level-number {
+    font-size: 28px;
+    letter-spacing: 3px;
+}
+.level-operation {
+    margin-top: 7px;
+    max-width: 150px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    line-height: 1.2;
+    letter-spacing: 1px;
+}
+.level-lock {
+    margin-top: 5px;
+    font-size: 9px;
+    letter-spacing: 2px;
 }
 .level-btn:active {
     transform: scale(0.95);

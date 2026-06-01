@@ -18,6 +18,39 @@ const MODE_GRID_IDS = {
     hard: 'hard-grid',
     insane: 'insane-grid'
 };
+const GALAXIAS_STAGE_LIMIT = 20;
+const GALAXIAS_OPERATION_NAMES = {
+    easy: [
+        'DELTA DAWN', 'REFUGEE ESCORT', 'BROKEN TREATY', 'COMET RECRUITS', 'ALPHA MEMORIAL',
+        'VANGUARD OATH', 'STARLINE AMBUSH', 'CIVILIAN SHIELD', 'REVENGE VECTOR', 'DELTA CROWN',
+        'BETA HUNTER', 'GAMMA RELIEF', 'ORBITAL WITNESS', 'WAR-CRIME ARCHIVE', 'SILVER FORMATION',
+        'LAST PILOT SIGNAL', 'TRUCEBREAKER FIELD', 'DELTA SPEAR', 'GALAXY VERDICT', 'POLEMOS GATE'
+    ],
+    sim: [
+        'GAMMA PERIMETER', 'GREEN MOON', 'WALL ARRAY', 'TURRET DISTRICT', 'ORBITAL SHELTER',
+        'PLANET HEART', 'CLOUD DEFENSE', 'BETA INCURSION', 'GUARD SHIP LINE', 'GAMMA CITADEL',
+        'TREATY BREAKERS', 'ATMOSPHERE SIEGE', 'EQUATOR GRID', 'PLANETARY LANCE', 'CIVILIAN ORBIT',
+        'FORTRESS GAMMA', 'BETA SHADOW', 'HOMEWORLD STAND', 'GREEN STAR COMMAND', 'GAMMA SURVIVES'
+    ],
+    hard: [
+        'FALSE TRANSPONDER', 'ELITE COVER', 'GAMMA AIRLOCK', 'TURRET SABOTAGE', 'SHADOW CORRIDOR',
+        'BETA TREATY', 'INNER ORBIT', 'PLANET MAP', 'DEFENSE KEY', 'INFILTRATOR PRIME',
+        'LOST PILOT MASK', 'GREEN SIGNAL', 'BETA KNIFE', 'CITADEL BREACH', 'OMEGA DIPLOMAT',
+        'BLACK BADGE', 'GAMMA COMMAND NODE', 'TREATY ENFORCER', 'BETA ASCENT', 'WINNING SIDE'
+    ],
+    insane: [
+        'MIMIC SPARK', 'MIMIC NEEDLE', 'MIMIC COMET', 'MIMIC PHANTOM', 'MIMIC VANGUARD',
+        'MIMIC JUGGERNAUT', 'MIMIC RADIANCE', 'MIMIC TANKER', 'MIMIC CORE', 'MIMIC ALPHA',
+        'MIMIC LANCE', 'MIMIC SWARM', 'MIMIC MIRROR', 'MIMIC SHADOW', 'MIMIC TREATY',
+        'MIMIC REVENGE', 'MIMIC WITNESS', 'MIMIC VERDICT', 'MIMIC LAST PILOT', 'MIMIC POLEMOS'
+    ]
+};
+const GALAXIAS_BOSS_NAMES = {
+    easy: ['TREATY SCARAB', 'BETA INTERCEPTOR', 'ARCHIVE SENTINEL', 'ORBITAL MAGISTRATE'],
+    sim: ['BETA BREACHER', 'ATMOSPHERE RAM', 'CITADEL DRILL', 'TREATY BOMBER'],
+    hard: ['GAMMA WATCHTOWER', 'GREEN CITADEL', 'PLANETARY WARDEN', 'ORBITAL JUDGE'],
+    insane: ['MIMIC PILOT', 'MIMIC ACE', 'MIMIC COMMANDER', 'MIMIC LAST PILOT']
+};
 const CAMPAIGN_DOCTRINES = {
     insane: {
         title: 'OMEGA COMMAND',
@@ -472,29 +505,19 @@ for (let stage = 60; stage <= 100; stage++) {
 STAGE_MESSAGES.easy_67 = "DT TANK. <br><br>Sector Alpha intelligence confirms the pilot is Dylan Tang, widely known in our offices as Dylan Villain. He is a super elite space-tank driver who was enrolled into the military school - Laser Beam-burst, and somehow he is only 10 years old after a youth-ray incident rewrote his body without touching his combat memory. <br><br>Do not laugh at the age report. The tank is real, the driver is dangerous, and his cannon patterns are built for close-range pressure.";
 STAGE_MESSAGES.hard_67 = "DT TANK [ELITE]. <br><br>Dylan Tang, the so-called Dylan Villain, is fielding the elite space-tank. The evil driver was enrolled into the military school in Sector Neon Void - Laser Beam-burst. The youth ray made him young again, but every old battlefield reflex stayed in place. <br><br>Expect armor plates, cannon bursts, and a driver who fights like he has something to prove.";
 
-function buildTransmission(mode, levelIndex, baseMessage) {
+function buildTransmission(mode, levelIndex) {
     const label = MODE_LABELS[mode] || MODE_LABELS.easy;
     const doctrine = CAMPAIGN_DOCTRINES[mode] || CAMPAIGN_DOCTRINES.easy;
+    const operation = GALAXIAS_OPERATION_NAMES[mode]?.[levelIndex - 1] || `POLEMOS FRONT ${levelIndex}`;
     const loreFrame = "Alpha is gone forever. Omega destroyed the sector with Beta beside it under treaty. Delta and Gamma declared the annihilation a war crime. The surviving Alpha pilot now drifts between revenge and infiltration.";
-    const warFrame = levelIndex <= 10
-        ? "This mission is still sabotage: cut into Sector Neon Void's energy chain and break System Core Omega before their war machine fully wakes."
-        : levelIndex < 50
-            ? "The sabotage run has become open war. Sector Neon Void is deploying old prototypes, copied bosses, and dread weapons to keep Alpha out."
-            : levelIndex < 90
-                ? "Sector Alpha is now deep inside enemy civilization space. Every boss is a defense platform, office weapon, or ancient sector relic."
-                : "This is no longer just sabotage. Sector Alpha is staring directly at the command architecture of Sector Neon Void.";
-    const sectorNote = levelIndex >= 100
-        ? "The true Neon Void is larger than its red shadow, purple at the core, and armed with attacks Sector Alpha has never recorded."
-        : levelIndex >= 90
-            ? "The red home-screen entity has entered real space as a 3D war core. Its orbiting wireframe shell is not decoration; it is a weapon cage."
-            : levelIndex >= 50
-                ? "Command is classifying this as a deep-void capital threat. Expect layered attacks, delayed follow-ups, and weapons that punish straight-line movement."
-                : levelIndex >= 40
-                    ? "This sector is past normal campaign calibration. Watch for attacks that change the whole screen before they try to hit you."
-                    : levelIndex >= 20
-                        ? "Enemy patterns are now combining older systems into new frames. Read the shape first, then dodge the attack."
-                        : "Keep your movement deliberate. The first warning is usually visual: a glow, a line, a ring, or a sudden shift in the boss body.";
-    return `${baseMessage}<br><br><strong>${doctrine.title} / ${label}</strong><br>${loreFrame}<br><br>${doctrine.allegiance}<br><br>${doctrine.objective}<br><br>${mode === 'insane' ? 'Controls: A/D or arrows to move Omega. Q, E, and R fire manual attacks when their cooldowns are ready.' : warFrame}<br><br>${sectorNote}`;
+    const missionFrames = {
+        easy: "Recruit ships from the starline and hold formation. Every recovered star can become another Delta pilot beside you.",
+        sim: "Gamma planet is the primary target. Spend the 300-star reserve before launch, then keep walls, turrets, and guard ships between the planet and the incoming fleet.",
+        hard: "Your false elite transponder is accepted. Enter Gamma territory under Beta cover, destroy defenses, and keep the lost pilot's identity hidden.",
+        insane: "Omega command has one ship: a pilot-shaped mimic core. Move on the X axis and choose when to release each cooldown attack against the arriving waves."
+    };
+    const contact = GALAXIAS_BOSS_NAMES[mode]?.[(levelIndex - 1) % GALAXIAS_BOSS_NAMES[mode].length] || "POLEMOS CONTACT";
+    return `<strong>OPERATION ${String(levelIndex).padStart(2, '0')} // ${operation}</strong><br><br>${doctrine.title} / ${label}<br>${loreFrame}<br><br>${doctrine.allegiance}<br><br>${doctrine.objective}<br><br>${missionFrames[mode] || missionFrames.easy}<br><br>Final contact: ${contact}. This is a Galaxias Polemos war frame with its own wireframe geometry and attack pattern.`;
 }
 
 function setCookie(name, value, days) { localStorage.setItem(name, value); }
@@ -772,10 +795,31 @@ function setCockpitMode(enabled) {
     document.body.classList.toggle('cockpit-mode', enabled);
 }
 
+function getStagePalette(mode = activeDifficultyMode, levelIndex = currentLevelIndex) {
+    const palettes = {
+        easy: [['#46b8ff', '#00f5d4'], ['#ffd966', '#46b8ff'], ['#8f7dff', '#00f5d4']],
+        sim: [['#7dff77', '#d7ff66'], ['#00f5a0', '#7dff77'], ['#9dffb0', '#44cc88']],
+        hard: [['#ff5b5b', '#ffb347'], ['#ff4477', '#ff8844'], ['#ff7766', '#ff3355']],
+        insane: [['#ff00aa', '#9b5cff'], ['#ff66cc', '#ff3355'], ['#cc66ff', '#ff00aa']]
+    };
+    const options = palettes[mode] || palettes.easy;
+    return options[Math.max(0, levelIndex - 1) % options.length];
+}
+
+function setStageTheme(mode, levelIndex) {
+    const [accent, secondary] = getStagePalette(mode, levelIndex);
+    document.body.dataset.protocol = mode;
+    document.body.style.setProperty('--stage-accent', accent);
+    document.body.style.setProperty('--stage-secondary', secondary);
+    document.body.classList.toggle('alternate-stage-grid', levelIndex % 2 === 0);
+}
+
 function drawWireframeBattlefield() {
     if (gameState !== STATE.PLAYING && gameState !== STATE.VICTORY_SEQUENCE) return;
+    const [accent, secondary] = getStagePalette();
     ctx.save();
-    ctx.strokeStyle = activeDifficultyMode === 'sim' ? 'rgba(125, 255, 119, 0.16)' : 'rgba(70, 184, 255, 0.14)';
+    ctx.globalAlpha = 0.22;
+    ctx.strokeStyle = accent;
     ctx.lineWidth = 1;
     const horizon = height * 0.28;
     for (let i = -8; i <= 8; i++) {
@@ -793,7 +837,7 @@ function drawWireframeBattlefield() {
         ctx.lineTo(width, y);
         ctx.stroke();
     }
-    ctx.strokeStyle = 'rgba(0, 245, 212, 0.16)';
+    ctx.strokeStyle = secondary;
     for (let i = 0; i < 6; i++) {
         const radius = 120 + i * 95 + Math.sin(frames * 0.018 + i) * 18;
         ctx.beginPath();
@@ -7385,6 +7429,128 @@ class Boss {
     }
 }
 
+class GalaxiasBoss {
+    constructor(mode, levelIndex) {
+        this.mode = mode;
+        this.levelIndex = levelIndex;
+        this.variant = (levelIndex - 1) % 4;
+        this.palette = getStagePalette(mode, levelIndex);
+        this.name = GALAXIAS_BOSS_NAMES[mode]?.[this.variant] || "POLEMOS CONTACT";
+        this.x = width / 2;
+        this.y = -140;
+        this.targetY = 150;
+        this.maxHp = Math.floor((1300 + levelIndex * 170) * (mode === 'hard' ? 1.35 : mode === 'sim' ? 1.18 : 1));
+        this.hp = this.maxHp;
+        this.active = true;
+        this.phase = 'fight';
+        this.timer = 0;
+        this.flashTimer = 0;
+    }
+
+    update() {
+        if (!this.active) return;
+        this.timer++;
+        this.y += (this.targetY - this.y) * 0.035;
+        this.x = width / 2 + Math.sin(this.timer * (0.012 + this.variant * 0.002)) * Math.min(width * 0.28, 240);
+        if (this.flashTimer > 0) this.flashTimer--;
+        if (this.y < 70) return;
+
+        const aimedAngle = Math.atan2(player.y - this.y, player.x - this.x);
+        const pace = Math.max(42, 96 - this.levelIndex * 2);
+        if (this.timer % pace === 0) {
+            const spread = this.variant === 1 ? 3 : 1;
+            for (let i = -spread; i <= spread; i++) {
+                const angle = aimedAngle + i * 0.16;
+                bullets.push(new Bullet(this.x, this.y + 28, Math.cos(angle) * 7.5, Math.sin(angle) * 7.5, 'boss_orb'));
+            }
+        }
+        if (this.variant === 0 && this.timer % 150 === 0) this.fireRing(10, 'fireball', 5.8);
+        if (this.variant === 1 && this.timer % 185 === 0) {
+            [-120, 0, 120].forEach(offset => bullets.push(new Bullet(this.x + offset, this.y + 12, 0, 8.5, 'purple_fireball')));
+        }
+        if (this.variant === 2 && this.timer % 210 === 0) {
+            for (let i = -4; i <= 4; i++) {
+                const angle = aimedAngle + i * 0.2;
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle) * 7, Math.sin(angle) * 7, i % 2 ? 'fireball' : 'purple_fireball'));
+            }
+        }
+        if (this.variant === 3 && this.timer % 170 === 0) this.fireRing(14, 'purple_fireball', 6.6);
+    }
+
+    fireRing(count, type, speed) {
+        for (let i = 0; i < count; i++) {
+            const angle = (Math.PI * 2 * i / count) + this.timer * 0.01;
+            bullets.push(new Bullet(this.x, this.y, Math.cos(angle) * speed, Math.sin(angle) * speed, type));
+        }
+    }
+
+    draw() {
+        if (!this.active) return;
+        const [accent, secondary] = this.palette;
+        const radius = 58 + this.variant * 8;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.timer * (this.variant % 2 ? -0.008 : 0.008));
+        ctx.strokeStyle = this.flashTimer > 0 ? '#ffffff' : accent;
+        ctx.shadowBlur = 24;
+        ctx.shadowColor = secondary;
+        ctx.lineWidth = 2.5;
+        for (let ring = 0; ring < 3; ring++) {
+            ctx.save();
+            ctx.rotate(ring * Math.PI / 6 + this.timer * 0.004);
+            ctx.beginPath();
+            const sides = 5 + this.variant + ring;
+            for (let i = 0; i <= sides; i++) {
+                const angle = Math.PI * 2 * i / sides;
+                const r = radius + ring * 15;
+                const px = Math.cos(angle) * r;
+                const py = Math.sin(angle) * r * (0.62 + ring * 0.08);
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+        ctx.strokeStyle = secondary;
+        for (let arm = 0; arm < 4 + this.variant; arm++) {
+            const angle = Math.PI * 2 * arm / (4 + this.variant);
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(angle) * 18, Math.sin(angle) * 18);
+            ctx.lineTo(Math.cos(angle) * (radius + 32), Math.sin(angle) * (radius + 32));
+            ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(0, 0, 18 + Math.sin(this.timer * 0.08) * 5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    hit(damage) {
+        if (!this.active) return;
+        this.hp -= damage;
+        this.flashTimer = 4;
+        bossHealthBar.style.width = `${Math.max(0, this.hp / this.maxHp * 100)}%`;
+        if (this.hp > 0) return;
+        this.active = false;
+        bossHealthBar.style.width = '0%';
+        playSound('explosion');
+        for (let i = 0; i < 110; i++) particles.push(new Particle(this.x, this.y, i % 2 ? this.palette[0] : this.palette[1], 10, 7, 90));
+        for (let i = 0; i < 50; i++) drops.push(new Drop(this.x + (Math.random() - 0.5) * 420, this.y, 'star'));
+        triggerSupernova();
+        startVictorySequence();
+    }
+}
+
+function startGalaxiasBoss() {
+    boss = new GalaxiasBoss(activeDifficultyMode, currentLevelIndex);
+    bossName.innerText = boss.name;
+    bossName.style.color = boss.palette[0];
+    bossHealthBar.style.width = '100%';
+    bossShieldBar.style.width = '0%';
+    bossShieldContainer.style.display = 'none';
+    bossHud.style.opacity = 1;
+}
+
 function createShockwave(x, y) {
      for(let i=0; i<360; i+=10) particles.push(new Particle(x, y, '#ffffff', 10, 3, 20));
 }
@@ -7449,6 +7615,13 @@ function spawnWaveEnemies(wave) {
             maxDelay = count * delay;
         }
         setTimeout(() => { waveClearCheckReady = true; }, maxDelay + 500);
+        return;
+    }
+
+    const galaxiasFinalWave = currentLevelIndex === 1 ? 10 : 15;
+    if (currentLevelIndex <= GALAXIAS_STAGE_LIMIT && wave === galaxiasFinalWave) {
+        startGalaxiasBoss();
+        setTimeout(() => { waveClearCheckReady = true; }, 500);
         return;
     }
 
@@ -8032,19 +8205,21 @@ function updateLevelGrid(mode) {
     if (!gridEl) return;
     
     gridEl.innerHTML = ''; 
-    let maxLevels = 12;
+    let maxLevels = GALAXIAS_STAGE_LIMIT;
 
     for(let i = 1; i <= maxLevels; i++) { 
         const btn = document.createElement('button'); btn.className = 'level-btn';
+        const operationName = GALAXIAS_OPERATION_NAMES[mode]?.[i - 1] || `POLEMOS FRONT ${i}`;
+        const number = i < 10 ? `0${i}` : i;
         if (i <= stats.maxStage) {
-            btn.classList.add('active'); btn.innerText = i < 10 ? `0${i}` : i; 
+            btn.classList.add('active'); btn.innerHTML = `<span class="level-number">${number}</span><span class="level-operation">${operationName}</span>`;
             btn.onclick = (event) => {
                 event.stopPropagation();
                 if (!canLaunchSelectedLevel(mode)) return;
                 launchMission(mode, i);
             };
         } else {
-            btn.classList.add('locked'); btn.innerHTML = `${i < 10 ? '0'+i : i} <span style="font-size:12px">🔒</span>`;
+            btn.classList.add('locked'); btn.innerHTML = `<span class="level-number">${number}</span><span class="level-operation">${operationName}</span><span class="level-lock">LOCKED</span>`;
             btn.onclick = (event) => {
                 event.stopPropagation();
                 if (!canLaunchSelectedLevel(mode)) return;
@@ -8651,6 +8826,7 @@ function launchMission(mode, levelIndex, gammaPrepared = false) {
     isInfiniteMode = false;
     infiniteWaveCount = 0;
     currentSettings = getDifficultySettings(mode); activeDifficultyMode = mode; currentLevelIndex = levelIndex;
+    setStageTheme(mode, levelIndex);
     document.body.classList.toggle('simulation-mode', mode === 'sim');
     setLevelMusic(levelIndex);
     menuScreen.style.opacity = '0'; menuScreen.style.pointerEvents = 'none';
@@ -8679,10 +8855,7 @@ function launchInfiniteMode(mode) {
 
 function startIntro(mode, levelIndex) {
     gameState = STATE.INTRO; introScreen.style.opacity = '1'; introScreen.style.pointerEvents = 'auto';
-    const key = `${mode}_${levelIndex}`;
-    const fallbackMode = mode === 'sim' ? 'easy' : (mode === 'insane' ? 'hard' : mode);
-    const msg = STAGE_MESSAGES[key] || STAGE_MESSAGES[`${fallbackMode}_${levelIndex}`] || "Transmission unclear. Proceed with caution.";
-    document.getElementById('radio-content').innerHTML = buildTransmission(mode, levelIndex, msg);
+    document.getElementById('radio-content').innerHTML = buildTransmission(mode, levelIndex);
     introTimer = 180; document.getElementById('intro-countdown').innerText = introTimer;
     if(introInterval) clearInterval(introInterval);
     introInterval = setInterval(() => { introTimer--; document.getElementById('intro-countdown').innerText = introTimer; if(introTimer <= 0) skipIntro(); }, 1000);
@@ -8715,7 +8888,7 @@ function startActualGameplay() {
     if (stageDisplayEl) stageDisplayEl.innerText = currentLevelIndex;
     bossHealthBar.style.width = '100%'; bossShieldBar.style.width = '0%';
     bossShieldContainer.style.display = "none";
-    bossName.innerText = "System Core: Omega"; bossName.style.color = "#ff4d4d";
+    bossName.innerText = "POLEMOS CONTACT"; bossName.style.color = "#ff4d4d";
     updateUI(); 
 
     gameState = STATE.PLAYING; isPhase2Active = false;
@@ -8808,7 +8981,7 @@ function gameOver(win) {
         if (currentLevelIndex === 100) {
             stats.infiniteUnlocked = true;
             changedData = true;
-            gameOverTitle.innerHTML = "SECTOR ALPHA VICTORY<br><span style=\"font-size:22px;color:#b9c0c8;letter-spacing:1px;\"> we've finally won! The galaxy is now free from Neon Void's torment... wait a minute, whats tha-<br>[connection terminated]<br>[sector office terminated by sector beta dreadnaught]<br><br><span style=\"color:#ffd966;\">COMING SOON - Galaxias Polemos I</span><br>Galaxy War 1</span>";
+            gameOverTitle.innerHTML = "GALAXIAS POLEMOS VICTORY<br><span style=\"font-size:22px;color:#b9c0c8;letter-spacing:1px;\">The treaty fleet has scattered. Delta and Gamma transmissions are returning across the galaxy.<br><br><span style=\"color:#ffd966;\">THE POLEMOS CONTINUES</span></span>";
             gameOverTitle.style.color = "#b000ff";
         }
         if (currentLevelIndex >= 10 && currentLevelIndex % 10 === 0) {

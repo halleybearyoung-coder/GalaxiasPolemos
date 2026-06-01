@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Galaxias Polemos</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=20260531-wireframe-cockpit">
+    <link rel="stylesheet" href="style.css?v=20260531-polemos-operations">
 </head>
 <body>
 
@@ -55,7 +55,7 @@
 
     <div id="ui-layer">
         <div id="boss-hud">
-            <div id="boss-name">System Core: Omega</div>
+            <div id="boss-name">Polemos Contact</div>
             <div id="boss-shield-container">
                 <div id="boss-shield-bar"></div>
             </div>
@@ -132,28 +132,28 @@
 
     <div id="level-select-screen" class="screen-overlay protocol-stage-screen">
         <div class="title-text">DELTA RECRUITMENT</div>
-        <div class="stage-page-note">12 operations // Build a fleet from collected stars and strike back for Alpha.</div>
+        <div class="stage-page-note">20 named operations // Build a recruit fleet from recovered stars and strike back for Alpha.</div>
         <div id="easy-grid" class="level-grid"></div>
         <button class="btn" onclick="resetToMenu()">BACK</button>
     </div>
 
     <div id="simulation-level-select-screen" class="screen-overlay protocol-stage-screen simulation-theme">
         <div class="title-text">GAMMA DEFENSE</div>
-        <div class="stage-page-note">12 operations // Choose a planet-defense operation, then spend the 300-star reserve.</div>
+        <div class="stage-page-note">20 named operations // Choose a planet-defense front, then spend the 300-star reserve.</div>
         <div id="sim-grid" class="level-grid"></div>
         <button class="btn" onclick="resetToMenu()">BACK</button>
     </div>
 
     <div id="expert-level-select-screen" class="screen-overlay protocol-stage-screen red-theme">
         <div class="title-text">BETA INFILTRATION</div>
-        <div class="stage-page-note">12 operations // Enter Gamma territory under an elite pilot cover identity.</div>
+        <div class="stage-page-note">20 named operations // Enter Gamma territory under an elite pilot cover identity.</div>
         <div id="hard-grid" class="level-grid"></div>
         <button class="btn" onclick="resetToMenu()">BACK</button>
     </div>
 
     <div id="insane-level-select-screen" class="screen-overlay protocol-stage-screen insane-theme">
         <div class="title-text">OMEGA COMMAND</div>
-        <div class="stage-page-note">12 operations // Command Omega against increasingly dangerous mimic pilot ships.</div>
+        <div class="stage-page-note">20 named operations // Command Omega against increasingly dangerous mimic pilot ships.</div>
         <div id="insane-grid" class="level-grid"></div>
         <button class="btn" onclick="resetToMenu()">BACK</button>
     </div>
@@ -314,6 +314,6 @@
         <button id="retry-btn" class="btn" onclick="resetToMenu()">Main Menu</button>
     </div>
 
-    <script src="script.js?v=20260531-wireframe-depth-stages"></script>
+    <script src="script.js?v=20260531-polemos-operations"></script>
 </body>
 </html>
