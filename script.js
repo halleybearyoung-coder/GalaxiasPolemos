@@ -800,6 +800,51 @@ function drawWireframeBattlefield() {
         ctx.arc(width / 2, horizon, radius, 0, Math.PI * 2);
         ctx.stroke();
     }
+    for (let i = 0; i < 7; i++) {
+        const lane = i - 3;
+        const depth = ((frames * 0.006 + i * 0.17) % 1);
+        const scale = 0.28 + depth * 1.9;
+        const x = width / 2 + lane * (68 + depth * 118);
+        const y = horizon + depth * depth * (height - horizon);
+        drawWireframeCube(x, y, 34 * scale, depth * 0.7 + frames * 0.004, depth);
+    }
+    for (let i = 0; i < 4; i++) {
+        const depth = ((frames * 0.004 + i * 0.23) % 1);
+        const radius = 38 + depth * 150;
+        const x = width * (i % 2 ? 0.78 : 0.22);
+        const y = horizon + depth * (height - horizon) * 0.82;
+        drawWireframeOrb(x, y, radius, frames * 0.008 + i);
+    }
+    ctx.restore();
+}
+
+function drawWireframeCube(x, y, size, spin, depth) {
+    const skew = size * 0.38;
+    const pulse = Math.sin(spin) * size * 0.08;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = `rgba(141, 183, 255, ${0.12 + depth * 0.3})`;
+    ctx.lineWidth = Math.max(1, depth * 2);
+    ctx.strokeRect(-size / 2, -size / 2, size, size);
+    ctx.strokeRect(-size / 2 + skew + pulse, -size / 2 - skew, size, size);
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy]) => {
+        ctx.beginPath();
+        ctx.moveTo(sx * size / 2, sy * size / 2);
+        ctx.lineTo(sx * size / 2 + skew + pulse, sy * size / 2 - skew);
+        ctx.stroke();
+    });
+    ctx.restore();
+}
+
+function drawWireframeOrb(x, y, radius, spin) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(spin);
+    ctx.strokeStyle = 'rgba(0, 245, 212, 0.22)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, 0, radius, radius * 0.32, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, 0, radius * 0.32, radius, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
 }
 
@@ -7987,7 +8032,7 @@ function updateLevelGrid(mode) {
     if (!gridEl) return;
     
     gridEl.innerHTML = ''; 
-    let maxLevels = 6;
+    let maxLevels = 12;
 
     for(let i = 1; i <= maxLevels; i++) { 
         const btn = document.createElement('button'); btn.className = 'level-btn';

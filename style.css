@@ -104,6 +104,26 @@ body.cockpit-mode #cockpit-overlay { display: block; }
 }
 .cockpit-reticle::before { top: 28px; left: -18px; width: 94px; height: 1px; }
 .cockpit-reticle::after { top: -18px; left: 28px; width: 1px; height: 94px; }
+#cockpit-overlay::before,
+#cockpit-overlay::after {
+    content: '';
+    position: absolute;
+    bottom: 8vh;
+    width: 28vw;
+    height: 22vh;
+    border-top: 2px solid rgba(0, 245, 212, 0.42);
+    filter: drop-shadow(0 0 9px rgba(0, 245, 212, 0.35));
+}
+#cockpit-overlay::before {
+    left: 5vw;
+    border-right: 3px solid rgba(0, 245, 212, 0.42);
+    transform: skewX(-28deg);
+}
+#cockpit-overlay::after {
+    right: 5vw;
+    border-left: 3px solid rgba(0, 245, 212, 0.42);
+    transform: skewX(28deg);
+}
 #ui-layer {
     position: absolute;
     top: 0;
